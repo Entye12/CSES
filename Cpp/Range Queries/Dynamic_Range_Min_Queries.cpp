@@ -3,65 +3,51 @@ using namespace std;
 using vi = vector<int>;
 
 
-int n0,n,q; const int INF = 1e9+1;
-vi segment_tree;
+int n,q;
+vi tree;
+const int inf = 1e9+1;
 
-int padding(int n){
-    int p = 0;
-    while ((1<<p)<n) p++;
-    return 1<<p;
-}
-
-int get_min(int a, int b){
-    a += (n-1); b += (n-1);
-    int x = INF;
-    while (a<=b){
-        if (a%2){
-            x = min(x,segment_tree[a]);
-            a++;
-        } 
-        if (b%2==0){
-            x = min(x,segment_tree[b]);
-            b--;
-        }
-        a/=2 ; b/=2;
-    }
-    return x;
-}
-
-void update(int k, int u){
-    k += n-1;
-    segment_tree[k] = u;
-    k /= 2;
-    while (k>0){
-        segment_tree[k] = min(segment_tree[2*k],segment_tree[2*k+1]);
-        k /= 2;
+void build(){
+    for (int i=n-1;i>0;i--){
+        tree[i] = min(tree[i<<1],tree[i<<1|1]);
     }
 }
 
-void preprocessing(){
-    scanf("%d %d",&n0,&q);
-    n = padding(n0);
-    segment_tree = vi(2*n,INF);
-    for (int i=n;i<n+n0;i++) scanf("%d",&segment_tree[i]);
-    for (int i=n-1;i>0;i--) segment_tree[i] = min(segment_tree[2*i],segment_tree[2*i+1]);
+void modify(int k,int u){
+    for (tree[k+=n-1] = u; k>1; k>>=1) tree[k>>1] = min(tree[k],tree[k^1]);
 }
 
+int getMin(int l, int r){
+    int res = inf;
+    for (l += n-1, r += n-1; l <= r; l >>= 1, r >>= 1){
+        if (l&1) res = min(res,tree[l++]);
+        if ((r & 1) == 0) res = min(res,tree[r--]);
+    }
+    return res;
+}
 
 int main(){
-    preprocessing();
-    for (int i=0;i<q;i++){
-        int t;
-        scanf("%d ",&t);
-        if (t==1){
-            int k; int u;
-            scanf("%d %d",&k,&u);
-            update(k,u);
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+
+    cin >> n >> q;
+    tree.assign(2*n,inf);
+    for (int i=n;i<2*n;i++) cin >> tree[i];
+    
+    build();
+
+    while (q--){
+        int type;
+        cin >> type;
+        if (type == 1){
+            int k,u;
+            cin >> k >> u;
+            modify(k,u);
         }
         else {
             int a,b;
-            scanf("%d %d",&a,&b);
-            printf("%d\n",get_min(a,b));
+            cin >> a >> b;
+            cout << getMin(a,b) << '\n';
         }
     }
     return 0;
