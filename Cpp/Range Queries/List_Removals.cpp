@@ -2,57 +2,63 @@
 using namespace std;
 using vi = vector<int>;
 
-int n0,n,k;
-vi segment_tree,numbers;
-
+int n,N;
+vi tree;
 
 int padding(int n){
-    int p = 0;
-    while ((1<<p)<n) p++;
-    return 1<<p;
+    int p = 1;
+    while (p < n) p <<= 1;
+    return p;
 }
 
-void preprocessing(){
-    scanf("%d",&n0);
-    n = padding(n0);
-    segment_tree = vi(2*n,0);
-    for (int i=n;i<n+n0;i++) segment_tree[i]++;
-    for (int i=n-1;i>0;i--) segment_tree[i] = segment_tree[2*i]+segment_tree[2*i+1];
-    numbers = vi(n0+1,0);
-    for (int i=1;i<=n0;i++){
-        scanf("%d",&numbers[i]);
+void build() {
+    for (int i = N - 1; i > 0; i--)
+        tree[i] = tree[i << 1] + tree[i << 1 | 1];
+}
+
+void deleteAt(int idx) {
+    idx += N - 1;
+    while (idx > 0) {
+        tree[idx]--;
+        idx >>= 1;
     }
 }
 
-void delete_at(int idx){
-    idx += n-1;
-    while (idx >0){
-        segment_tree[idx]--;
-        idx /= 2;
-    }
-}
-
-int get_true_index(int k){
+int getTrueIdx(int k){
     int idx = 1;
-    while (idx < n){
-        if (segment_tree[2*idx] >= k) idx *= 2;
+    while (idx < N){
+        if (tree[idx << 1] >= k) idx <<= 1;
         else {
-            k -= segment_tree[2*idx];
-            idx = 2*idx+1;
+            k -= tree[idx << 1];
+            idx = (idx << 1) | 1;
         }
     }
-    return idx-n+1;
+    return idx-N+1;
 }
 
+int main() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
 
-
-int main(){
-    preprocessing();
-    for (int i=1;i<=n0;i++){
-        scanf("%d",&k);
-        int idx = get_true_index(k);
-        delete_at(idx);
-        printf("%d ",numbers[idx]);
+    cin >> n;
+    N = padding(n);
+    
+    tree.assign(2 * N, 0);
+    vi a(n+1,0);
+    for (int i=1;i<=n;i++){
+        cin >> a[i];
+        tree[i+N-1] = 1;
     }
+    
+    build();
+
+    for (int i=1;i<=n;i++){
+        int k;
+        cin >> k;
+        int idx = getTrueIdx(k);
+        deleteAt(idx);
+        cout << a[idx] << " ";
+    }
+
     return 0;
 }
